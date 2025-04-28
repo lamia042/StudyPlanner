@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task Manager</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0A1626] text-purple-400 font-sans">
+
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-semibold text-center mb-6">All Tasks</h1>
+
+    <!-- No tasks message -->
+    <div id="no-tasks-message" class="hidden text-center text-lg text-red-500">
+        No tasks available.
+    </div>
+
+    <!-- Task Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-[#1F2937] border border-gray-700 rounded-lg shadow-md mt-6">
+            <thead class="bg-purple-700 text-white">
+            <tr>
+                <th class="px-6 py-3 text-center w-1/6">Subject</th>
+                <th class="px-6 py-3 text-center w-1/6">Task</th>
+                <th class="px-6 py-3 text-center w-2/6">Description</th>
+                <th class="px-6 py-3 text-center w-1/6">Date</th>
+                <th class="px-6 py-3 text-center w-1/6">Priority</th>
+                <th class="px-6 py-3 text-center w-1/6">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="tasks-list" class="divide-y divide-gray-600"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Fetch tasks and display them
+    async function fetchAllTasks() {
+        try {
+            const response = await fetch("http://localhost:8080/tasks/");  // Adjust the URL based on your backend
+            if (response.ok) {
+                const textResponse = await response.text(); // Get the raw text from the response
+                const tasks = JSON.parse(textResponse); // Parse the JSON response
+                const tasksList = document.getElementById("tasks-list");
+                const noTasksMessage = document.getElementById("no-tasks-message");
+
+                tasksList.innerHTML = '';  // Clear current tasks
+
+                if (tasks.length === 0) {
+                    noTasksMessage.classList.remove('hidden');
+                } else {
+                    noTasksMessage.classList.add('hidden');
+                    tasks.forEach(task => {
+                        const taskRow = document.createElement("tr");
+                        taskRow.classList.add("hover:bg-gray-800", "transition-all");
+                        taskRow.innerHTML = `
+                            <td class="px-6 py-3 text-center w-1/6">${task.subject}</td>
+                            <td class="px-6 py-3 text-center w-1/6">${task.task}</td>
+                            <td class="px-6 py-3 text-center w-2/6">${task.description}</td>
+                            <td class="px-6 py-3 text-center w-1/6">${task.date}</td>
+                            <td class="px-6 py-3 text-center w-1/6">${task.priority}</td>
+                            <td class="px-6 py-3 text-center w-1/6">
+                                <button class="bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-all delete-btn" data-id="${task.id}">
+                                    Delete
+                                </button>
+                            </td>
+                        `;
+                        tasksList.appendChild(taskRow);
+                    });
+                }
+            } else {
+                throw new Error("Failed to fetch tasks from the server.");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // Delete task handler
+    document.getElementById("tasks-list").addEventListener("click", async (event) => {
+        if (event.target && event.target.classList.contains("delete-btn")) {
+            const taskId = event.target.getAttribute("data-id");
+            const confirmDelete = await Swal.fire({
+                title: 'Are you sure?',
+                text: "This will delete the task.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Yes, delete it!',
+                cancelButtonText: 'No, cancel!'
+            });
+
+            if (confirmDelete.isConfirmed) {
+                try {
+                    const response = await fetch(`http://localhost:8080/tasks/${taskId}`, {
+                        method: 'DELETE',
+                    });
+
+                    if (response.ok) {
+                        Swal.fire('Deleted!', 'Task was deleted successfully!', 'success');
+
+                        // Remove the task from the DOM immediately
+                        const taskRow = event.target.closest('tr');
+                        taskRow.remove();
+
+                        // Check if no tasks are left
+                        const tasksList = document.getElementById("tasks-list");
+                        const noTasksMessage = document.getElementById("no-tasks-message");
+                        if (tasksList.children.length === 0) {
+                            noTasksMessage.classList.remove('hidden');
+                        }
+                    } else {
+                        throw new Error('Failed to delete task');
+                    }
+                } catch (error) {
+                    Swal.fire('Error!', error.message, 'error');
+                }
+            }
+        }
+    });
+
+    // Initially load tasks
+    fetchAllTasks();
+</script>
+
+</body>
+</html>

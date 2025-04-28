@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeGrid</title>
+    <link rel="icon" href="./assets/favicon copy.png" type="image/png">
+    <!-- DaisyUI and Tailwind CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Merriweather:ital,opsz,wght@0,18..144,300..900;1,18..144,300..900&family=Winky+Sans:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        .winky-san {
+            font-family: "Winky Sans", sans-serif;
+            font-optical-sizing: auto;
+        }
+
+        .merriweather {
+            font-family: "Merriweather", serif;
+            font-optical-sizing: auto;
+        }
+
+        /* Makes the calendar icon white in some browsers */
+        input[type="date"]::-webkit-calendar-picker-indicator {
+            filter: invert(1); /* inverts the dark calendar icon to white */
+        }
+    </style>
+</head>
+<body class="bg-[#0A1626] text-purple-400 font-sans">
+<!-- Top Navbar -->
+<div class="navbar flex justify-between bg-gradient-to-r from-[#111927] to-[#1f2937] p-4 rounded-t-md shadow-md">
+    <div class="flex ml-10">
+        <h1 class="text-xl font-semibold ml-4 winky-san">TimeGrid</h1>
+        <img src="./photos/watch.png" alt="" class="w-8 pb-2">
+    </div>
+    <div class="">
+        <button id="logout-btn" class="w-full bg-transparent border border-purple-400 text-purple-400 font-semibold px-2 rounded hover:bg-purple-500 hover:text-white transition">
+            LOG OUT
+        </button>
+    </div>
+</div>
+
+<div class="flex min-h-screen">
+    <!-- Sidebar -->
+    <aside class="w-64 bg-[#0A1626] border-r border-gray-700 p-4 space-y-6 text-sm">
+        <nav class="space-y-4">
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer text-lg">
+                <span>📁</span>
+                <span>Dashboard</span>
+            </div>
+            <hr>
+            <!-- Updated link to 'All Tasks' -->
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">
+                <span><i class="fa-solid fa-envelope"></i></span>
+                <a href="all-tasks.html">
+                    <span>All Tasks</span>
+                </a>
+            </div>
+
+<!--            <div id="manage-task-btn" class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">-->
+<!--                <span><i class="fa-solid fa-magnifying-glass"></i></span>-->
+<!--                <a href="manage-tasks.html">-->
+<!--                    <span>Manage Tasks</span>-->
+<!--                </a>-->
+<!--            </div>-->
+
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">
+                <span><i class="fa-solid fa-envelope"></i></span>
+                <a href="upcoming-tasks.html">
+                    <span>Upcoming Tasks</span>
+                </a>
+            </div>
+
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">
+                <span><i class="fa-solid fa-calendar-days"></i></span>
+                <span>Calendar View</span>
+            </div>
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">
+                <span><i class="fa-solid fa-box-archive"></i></span>
+                <span>Archived Tasks</span>
+            </div>
+            <hr>
+
+            <div id="create-task-btn" class="flex items-center gap-2 hover:text-purple-300 cursor-pointer pt-2">
+                <span><i class="fa-solid fa-plus"></i></span>
+                <span>Create New Task</span>
+            </div>
+
+            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">
+                <span><i class="fa-regular fa-pen-to-square"></i></span>
+                <a href="update-tasks.html">
+                <span>Update Task</span>
+                </a>
+            </div>
+
+<!--            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">-->
+<!--                <span><i class="fa-solid fa-trash"></i></span>-->
+<!--                <span>Delete Task</span>-->
+<!--            </div>-->
+
+<!--            <div class="flex items-center gap-2 hover:text-purple-300 cursor-pointer">-->
+<!--                <span><i class="fa-solid fa-folder-tree"></i></span>-->
+<!--                <span>More...</span>-->
+<!--            </div>-->
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 text-center">
+        <div class="text-purple-400 py-10 pt-0 rounded">
+
+            <!-- Manage Task -->
+            <section id="manage-task" class="mt-6 px-10 hidden">
+                <p class="text-xl font-semibold mb-4">Manage Your Tasks From Here</p>
+                <div class="flex flex-row gap-16">
+                    <label class="floating-label relative w-1/2">
+                        <input type="text" id="medium-input" placeholder="Subject" class="input input-md bg-[#0d1c30] text-purple-400 peer w-full border-black" />
+                        <span class="absolute left-3 top-2 transition-all duration-300 bg-[#10233c] text-purple-400 px-1 peer-placeholder-shown:top-2 peer-placeholder-shown:text-base peer-focus:top-[-0.6rem] peer-focus:text-sm peer-focus:bg-transparent">Subject</span>
+                    </label>
+                    <label class="input bg-[#0d1d32] flex items-center w-1/2">
+                        <svg class="h-[1em] opacity-50 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                            <g stroke-linejoin="round" stroke-linecap="round" stroke-width="2.5" fill="none" stroke="currentColor">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <path d="m21 21-4.3-4.3"></path>
+                            </g>
+                        </svg>
+                        <input type="search" required placeholder="Search by Task Name" class="bg-transparent outline-none w-full text-purple-400" />
+                    </label>
+                </div>
+            </section>
+
+            <!-- Create Task -->
+            <section id="create-task-section" class="bg-[#0A1626] p-6 rounded-lg text-purple-400 max-w-5xl mx-auto hidden">
+                <h2 class="text-2xl font-semibold mb-6 text-center">Create Your New Task</h2>
+                <form id="create-task-form" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Subject -->
+                    <div>
+                        <label class="block mb-2">Subject</label>
+                        <input type="text" name="subject" id="subject" placeholder="Enter Your Subject Name" class="input input-bordered w-full text-purple-400 bg-[#0A1626] border-purple-400">
+                    </div>
+                    <!-- Task -->
+                    <div>
+                        <label class="block mb-2">Task</label>
+                        <input type="text" name="task" id="task" placeholder="Enter task title" class="input input-bordered w-full text-purple-400 bg-[#0A1626] border-purple-400">
+                    </div>
+                    <!-- Description -->
+                    <div class="col-span-1 md:col-span-2">
+                        <label class="block mb-2">Description</label>
+                        <textarea name="description" id="description" class="textarea textarea-bordered w-full text-purple-400 bg-[#0A1626] border-purple-400" rows="3" placeholder="Write details..."></textarea>
+                    </div>
+                    <!-- Date -->
+                    <div>
+                        <label class="block mb-2">Date</label>
+                        <input type="date" name="date" id="date" class="input input-bordered w-full text-purple-400 bg-[#0A1626] border-purple-400">
+                    </div>
+                    <!-- Priority -->
+                    <div>
+                        <label class="block mb-2">Priority</label>
+                        <select name="priority" id="priority" class="select select-bordered w-full text-purple-400 bg-[#0A1626] border-purple-400">
+                            <option disabled selected>Select subject</option>
+                            <option>High</option>
+                            <option>Medium</option>
+                            <option>Low</option>
+                        </select>
+                    </div>
+                    <!-- Button -->
+                    <div class="col-span-1 md:col-span-2">
+                        <button type="submit" class="btn bg-purple-400 hover:bg-purple-500 text-white px-6 rounded">ADD</button>
+                    </div>
+                </form>
+            </section>
+
+        </div>
+    </main>
+</div>
+
+<!-- JavaScript -->
+<script src="./dashboard.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const logoutBtn = document.getElementById("logout-btn");
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            window.speechSynthesis.speak(utterance);
+        }
+
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", function () {
+                speak("Are you sure? You will be logged out!");
+
+                Swal.fire({
+                    title: "Are you sure?",
+                    text: "You will be logged out!",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Yes, log out!",
+                    cancelButtonText: "Cancel"
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        speak("Logging out. Redirecting to login page.");
+                        // Go back to login page
+                        setTimeout(() => {
+                            window.location.href = "/";
+                        }, 1500); // small delay for speech to complete
+                    } else {
+                        speak("Logout cancelled.");
+                    }
+                });
+            });
+        }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const createTaskBtn = document.getElementById("create-task-btn");
+        const createTaskSection = document.getElementById("create-task-section");
+
+        createTaskBtn.addEventListener("click", function () {
+            createTaskSection.classList.toggle("hidden");
+        });
+
+        const form = document.getElementById("create-task-form");
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const formData = {
+                subject: document.getElementById("subject").value,
+                task: document.getElementById("task").value,
+                description: document.getElementById("description").value,
+                date: document.getElementById("date").value,
+                priority: document.getElementById("priority").value
+            };
+
+            try {
+                const response = await fetch("/tasks/create", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                if (response.ok) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Task Created',
+                        text: 'Your task has been successfully created!'
+                    });
+                    form.reset();
+                } else {
+                    throw new Error('Something went wrong');
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Oops...',
+                    text: error.message
+                });
+            }
+        });
+    });
+</script>
+</body>
+</html>

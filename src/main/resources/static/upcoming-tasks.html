@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upcoming Tasks</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0A1626] text-purple-400 font-sans">
+
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-semibold text-center mb-6">Upcoming Tasks</h1>
+
+    <!-- No tasks message -->
+    <div id="no-tasks-message" class="hidden text-center text-lg text-red-500">
+        No upcoming tasks.
+    </div>
+
+    <!-- Task Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-[#1F2937] border border-gray-700 rounded-lg shadow-md mt-6">
+            <thead class="bg-purple-700 text-white">
+            <tr>
+                <th class="px-6 py-3 text-center w-1/4">Subject</th>
+                <th class="px-6 py-3 text-center w-1/4">Task</th>
+                <th class="px-6 py-3 text-center w-1/4">Date</th>
+                <th class="px-6 py-3 text-center w-1/4">Priority</th>
+            </tr>
+            </thead>
+            <tbody id="upcoming-tasks-list" class="divide-y divide-gray-600"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Fetch and display upcoming 5 tasks sorted by date and priority
+    async function fetchUpcomingTasks() {
+        try {
+            const response = await fetch("http://localhost:8080/tasks/");
+            if (response.ok) {
+                const tasks = await response.json();
+                const upcomingTasksList = document.getElementById("upcoming-tasks-list");
+                const noTasksMessage = document.getElementById("no-tasks-message");
+
+                upcomingTasksList.innerHTML = '';
+
+                if (tasks.length === 0) {
+                    noTasksMessage.classList.remove('hidden');
+                } else {
+                    noTasksMessage.classList.add('hidden');
+
+<!--                    // Sort tasks by date first, then by priority (high, medium, low)-->
+<!--                    const priorityOrder = { 'high': 3, 'medium': 2, 'low': 1 };-->
+<!--                    tasks.sort((a, b) => {-->
+<!--                        const dateA = new Date(a.date);-->
+<!--                        const dateB = new Date(b.date);-->
+<!--                        // First sort by date-->
+<!--                        if (dateA - dateB !== 0) {-->
+<!--                            return dateA - dateB; // If dates are different, sort by date-->
+<!--                        }-->
+<!--                        // If dates are the same, then sort by priority (high, medium, low)-->
+<!--                        return priorityOrder[b.priority] - priorityOrder[a.priority];-->
+<!--                    });-->
+
+                    // Get only the latest 5 tasks
+                    const latestFiveTasks = tasks.slice(0, 5);
+
+                    latestFiveTasks.forEach(task => {
+                        const taskRow = document.createElement("tr");
+                        taskRow.classList.add("hover:bg-gray-800", "transition-all");
+                        taskRow.innerHTML = `
+                            <td class="px-6 py-3 text-center">${task.subject}</td>
+                            <td class="px-6 py-3 text-center">${task.task}</td>
+                            <td class="px-6 py-3 text-center">${task.date}</td>
+                            <td class="px-6 py-3 text-center">${task.priority}</td>
+                        `;
+                        upcomingTasksList.appendChild(taskRow);
+                    });
+                }
+            } else {
+                throw new Error("Failed to fetch tasks.");
+            }
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    // Initial fetch
+    fetchUpcomingTasks();
+</script>
+
+</body>
+</html>

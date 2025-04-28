@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update Task</title>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#0A1626] text-purple-400 font-sans">
+
+<div class="container mx-auto p-6">
+    <h1 class="text-4xl font-semibold text-center mb-6">Update Tasks</h1>
+
+    <!-- No tasks message -->
+    <div id="no-tasks-message" class="hidden text-center text-lg text-red-500">
+        No tasks available.
+    </div>
+
+    <!-- Task Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full bg-[#1F2937] border border-gray-700 rounded-lg shadow-md mt-6">
+            <thead class="bg-purple-700 text-white">
+            <tr>
+                <th class="px-6 py-3 text-center w-1/6">Subject</th>
+                <th class="px-6 py-3 text-center w-1/6">Task</th>
+                <th class="px-6 py-3 text-center w-2/6">Description</th>
+                <th class="px-6 py-3 text-center w-1/6">Date</th>
+                <th class="px-6 py-3 text-center w-1/6">Priority</th>
+                <th class="px-6 py-3 text-center w-1/6">Actions</th>
+            </tr>
+            </thead>
+            <tbody id="tasks-list" class="divide-y divide-gray-600"></tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Update Modal -->
+<div id="update-modal" class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden">
+    <div class="bg-[#1F2937] text-purple-300 rounded-xl p-8 w-96 shadow-2xl">
+        <h2 class="text-2xl font-bold mb-6 text-center text-purple-400">Update Task</h2>
+        <form id="update-form" class="space-y-4">
+            <input type="hidden" id="update-id">
+            <div>
+                <label class="block text-purple-400 mb-1">Subject</label>
+                <input type="text" id="update-subject" class="w-full px-4 py-2 border border-purple-500 bg-[#0A1626] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+            </div>
+            <div>
+                <label class="block text-purple-400 mb-1">Task</label>
+                <input type="text" id="update-task" class="w-full px-4 py-2 border border-purple-500 bg-[#0A1626] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+            </div>
+            <div>
+                <label class="block text-purple-400 mb-1">Description</label>
+                <textarea id="update-description" class="w-full px-4 py-2 border border-purple-500 bg-[#0A1626] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600"></textarea>
+            </div>
+            <div>
+                <label class="block text-purple-400 mb-1">Date</label>
+                <input type="date" id="update-date" class="w-full px-4 py-2 border border-purple-500 bg-[#0A1626] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+            </div>
+            <div>
+                <label class="block text-purple-400 mb-1">Priority</label>
+                <select id="update-priority" class="w-full px-4 py-2 border border-purple-500 bg-[#0A1626] rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-600">
+                    <option value="Low" class="bg-[#0A1626]">Low</option>
+                    <option value="Medium" class="bg-[#0A1626]">Medium</option>
+                    <option value="High" class="bg-[#0A1626]">High</option>
+                </select>
+            </div>
+            <div class="flex justify-between mt-6">
+                <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-all">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-purple-700 hover:bg-purple-800 text-white rounded-lg transition-all">Update</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Fetch and display all tasks
+    async function fetchAllTasks() {
+      try {
+        const response = await fetch("http://localhost:8080/tasks/");
+        if (response.ok) {
+          const tasks = await response.json();
+          const tasksList = document.getElementById("tasks-list");
+          const noTasksMessage = document.getElementById("no-tasks-message");
+
+          tasksList.innerHTML = '';
+
+          if (tasks.length === 0) {
+            noTasksMessage.classList.remove('hidden');
+          } else {
+            noTasksMessage.classList.add('hidden');
+            tasks.forEach(task => {
+              const taskRow = document.createElement("tr");
+              taskRow.classList.add("hover:bg-gray-800", "transition-all");
+              taskRow.innerHTML = `
+                <td class="px-6 py-3 text-center">${task.subject}</td>
+                <td class="px-6 py-3 text-center">${task.task}</td>
+                <td class="px-6 py-3 text-center">${task.description}</td>
+                <td class="px-6 py-3 text-center">${task.date}</td>
+                <td class="px-6 py-3 text-center">${task.priority}</td>
+                <td class="px-6 py-3 text-center">
+                  <button class="bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-all edit-btn"
+                    data-id="${task.id}"
+                    data-subject="${task.subject}"
+                    data-task="${task.task}"
+                    data-description="${task.description}"
+                    data-date="${task.date}"
+                    data-priority="${task.priority}">
+                    Edit
+                  </button>
+                </td>
+              `;
+              tasksList.appendChild(taskRow);
+            });
+          }
+        } else {
+          throw new Error("Failed to fetch tasks.");
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    // Open modal and fill data
+    document.getElementById("tasks-list").addEventListener("click", (event) => {
+      if (event.target.classList.contains("edit-btn")) {
+        const button = event.target;
+        document.getElementById("update-id").value = button.getAttribute("data-id");
+        document.getElementById("update-subject").value = button.getAttribute("data-subject");
+        document.getElementById("update-task").value = button.getAttribute("data-task");
+        document.getElementById("update-description").value = button.getAttribute("data-description");
+        document.getElementById("update-date").value = button.getAttribute("data-date");
+        document.getElementById("update-priority").value = button.getAttribute("data-priority");
+        openModal();
+      }
+    });
+
+    // Open modal
+    function openModal() {
+      document.getElementById("update-modal").classList.remove("hidden");
+    }
+
+    // Close modal
+    function closeModal() {
+      document.getElementById("update-modal").classList.add("hidden");
+    }
+
+    // Update task
+    document.getElementById("update-form").addEventListener("submit", async (event) => {
+      event.preventDefault();
+      const id = document.getElementById("update-id").value;
+      const subject = document.getElementById("update-subject").value;
+      const task = document.getElementById("update-task").value;
+      const description = document.getElementById("update-description").value;
+      const date = document.getElementById("update-date").value;
+      const priority = document.getElementById("update-priority").value;
+
+      const updatedTask = { subject, task, description, date, priority };
+
+      try {
+        const response = await fetch(`http://localhost:8080/tasks/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(updatedTask),
+        });
+
+        if (response.ok) {
+          Swal.fire('Updated!', 'Task was updated successfully!', 'success');
+          closeModal();
+          fetchAllTasks();
+        } else {
+          throw new Error("Failed to update task.");
+        }
+      } catch (error) {
+        Swal.fire('Error!', error.message, 'error');
+      }
+    });
+
+    // Initial fetch
+    fetchAllTasks();
+</script>
+
+</body>
+</html>
